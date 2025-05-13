@@ -1,1 +1,11 @@
+## Hardware:
+ - **RTL-SDR**, I'm using the RTL-SDR v3 — it’s cheap and works well. SDRPlay also works but needs a bit of tweaking.
+ - **Wideband antenna**, discone antenna is ideal.
+ - **External Hard drive**, recordings take up a lot of space!! get something with a few hundred GB.
+ - **Laptop**, it will run on a raspberry pi with a few changes to the code making the whole thing a bit slower.
 
+## Python Libraries (import):
+ - **h5py** (storage)
+ - **numpy** 
+ - **matplotlib** (plotting)
+ - **pyrtlsdr**
