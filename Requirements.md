@@ -1,7 +1,7 @@
 
 ## Hardware
 
-- **RTL-SDR **  
+- **RTL-SDR**  
   A cheap and effective USB software-defined radio.  
   SDRPlay devices are also supported with some code modifications.
 
