@@ -11,14 +11,12 @@ This code was mainly focused on the 700 MHz to 2 GHz range with some tests also 
 # How it works ?? 
 
  ```text
-1. Start Script
-     │
-     ▼
-2. Set Parameters
+
+1. Set Parameters and Run Code
    (frequency range, sample rate, subdivisions, gain)
      │
      ▼
-3. Frequency Hopping Loop
+2. Frequency Hopping Loop
    ┌──────────────────────────────────────────┐
    │ For each frequency window:               │
    │   - Record IQ samples using RTL-SDR      │
@@ -26,21 +24,26 @@ This code was mainly focused on the 700 MHz to 2 GHz range with some tests also 
    └──────────────────────────────────────────┘
      │
      ▼
-4. Process Data
+3. Process Data
    - Apply FFT to convert time → frequency domain
    - Normalize using baseline (optional)
      │
      ▼
-5. Save Processed Data
+4. Save Processed Data
    - Store FFT outputs in smaller HDF5 chunks
      │
      ▼
-6. Display / Visualize
+5. Display / Visualize
    - Generate waterfall image (freq vs. time)
    - Optionally add ComReg band overlays
  ```
 
 ----
- # How to use it?? 
- 1. Install all the libraries and the code provided in the src directory.
+# How to use original main function ( main1() )? 
+ 1. Run all the libraries and the code provided in the src directory.
  2. 
+
+# How to use new main2() function ? (Still working on it)
+1. Run all the pyhton code into jupyter or anyother python interface.
+2. 
+
