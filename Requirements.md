@@ -14,7 +14,13 @@
 
 - **Laptop**  
   Also runs on Raspberry Pi with some changes.
+  
+---------
 
+## Software
+- Python 3
+- HDF5 Support 
+- RTL SDR Driver
 ---
 
 ## Python Libraries
