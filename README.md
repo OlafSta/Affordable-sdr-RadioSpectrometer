@@ -39,11 +39,7 @@ This code was mainly focused on the 700 MHz to 2 GHz range with some tests also 
  ```
 
 ----
-# How to use original main function ( main1() )? 
- 1. Run all the libraries and the code provided in the src directory.
- 2. 
-
-# How to use new main2() function ? (Still working on it)
-1. Run all the pyhton code into jupyter or anyother python interface.
+# How to use it ??
+1. Install all drivers, libraries and ensure you have everything from the requirements.md file.
 2. 
 
