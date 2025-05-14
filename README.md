@@ -1,4 +1,4 @@
-# Affordable-sdr-spectrometer-
+# Affordable_sdr_radio_spectrometer / RFI_monitor
 
 This project is a simple and affordable way to scan and image large portions of the radio spectrum using an RTL-SDR and Python. 
 
