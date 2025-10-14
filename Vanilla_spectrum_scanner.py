@@ -1,5 +1,6 @@
 # This file contains all basic code bits from the scr directory in one place
 # Part of this can be replaced with things like the modified waterfall plot that adds the frequency allocations 
+#This version of the code is the basic vanilla version that contains quite a lot of bottle necks, making it quite inefficient and slow to run.
 
 import h5py
 import numpy as np
