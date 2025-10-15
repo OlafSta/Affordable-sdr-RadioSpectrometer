@@ -56,13 +56,15 @@ The start of this document will talk you through the basics of the inital code, 
 
 # Limitations and Fixes:
 1. This system is ineeficient and has the following bottlenecks
-   - Recoring bandwidth (Hardware)
-   - Opening and closing the RTL Object takes time and is repated at each frequency hop (Software)
-   - Callculating the FFT is done in a loop for each line, Calculate this using C++ code insead, use a GPU to calcuate this in parallel, store the data in a vector over a list.
-   - Reduce the number of loops (Vectorisation).
-3. Time is not accurate.
-4. The power level is not actually based on a real value and the system needs to be calibrated to a known source.
-5. Add more user friendly features and interface.
+   - Recoring bandwidth. (Hardware)
+   - Opening and closing the RTL Object takes time and is repated at each frequency hop. (Software)
+   - Callculating the FFT is done in a loop for each line, Calculate this using C++ code insead, use a GPU to calcuate this in parallel, store the data in a vector over a list. (Software)
+   - Reduce the number of loops, Vectorisation. (Software)
+3. Time is not accurate. This is as the time is actually not calculated and is only estimated in the original vanilla code. There is a few fixes for this.
+   - Measure the delay between each measurment and model the system to represent the system. 
+   - Timestamp each measurment and graph based on these stamps.
+5. The power level is not actually based on a real value and the system needs to be calibrated to a known source.
+6. Add more user friendly features and interface.
 
 ----
 
