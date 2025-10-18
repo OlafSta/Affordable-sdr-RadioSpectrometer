@@ -40,31 +40,33 @@ The start of this document will talk you through the basics of the inital code, 
  ```
 
 ----
-# How to use it ??
-1. Install all drivers, libraries and ensure you have everything from the requirements.md file.
-2. Copy the code into a python file.
-3. Plug the SDR into your laptop (note to not attach the antenna)
-4. Take a baseline recording of your SDR at the midpoint of your scan bandwidth, example if taking a recoring from 50-100MHz take a recording at 75MHz. You can take more recording and average out the SDR respons with no antenna.
-5. Attach the antenna to the SDR making sure the setup it sound (for example dont place your antenna infront of a open running microwave)
-6. Set your parameters and run the main function to take the recording.
-7. Process the flat field correction array
-8. Process the Main recording (this takes quite a long time)
-9. Run the processed data through the waterfall display function that stacks all the images and and create a waterfall
-10. Stitch the waterfalls together with another function.
+# How to Use It ??
+1. Install all required drivers and libraries, and make sure you have everything listed in the `requirements.md` file.  
+2. Copy the code into a Python file.  
+3. Plug the SDR into your laptop (**note:** do not attach the antenna yet).  
+4. Take a baseline recording of your SDR at the midpoint of your scan bandwidth.  
+   - Example: if you’re recording from 50–100 MHz, take a recording at 75 MHz.  
+   - You can take multiple recordings and average the SDR response with no antenna attached.  
+5. Attach the antenna to the SDR, making sure the setup is safe and stable (for example, don’t place the antenna in front of an open, running microwave).  
+6. Set your parameters and run the main function to start recording.  
+7. Process the flat-field correction array.  
+8. Process the main recording (this step can take quite a while).  
+9. Run the processed data through the waterfall display function to stack all the images and create a full waterfall plot.  
+10. Stitch the waterfalls together using the provided function.  
 
-----
+---
 
-# Limitations and Fixes:
-1. This system is ineeficient and has the following bottlenecks
-   - Recoring bandwidth. (Hardware)
-   - Opening and closing the RTL Object takes time and is repated at each frequency hop. (Software)
-   - Callculating the FFT is done in a loop for each line, Calculate this using C++ code insead, use a GPU to calcuate this in parallel, store the data in a vector over a list. (Software)
-   - Reduce the number of loops, Vectorisation. (Software)
-3. Time is not accurate. This is as the time is actually not calculated and is only estimated in the original vanilla code. There is a few fixes for this.
-   - Measure the delay between each measurment and model the system to represent the system. 
-   - Timestamp each measurment and graph based on these stamps.
-5. The power level is not actually based on a real value and the system needs to be calibrated to a known source.
-6. Add more user friendly features and interface.
+# Limitations and Fixes
+1. This system is **inefficient** and has the following bottlenecks:  
+   - **Recording bandwidth** — limited by hardware.  
+   - **Opening and closing the RTL object** — takes time and is repeated at each frequency hop (software).  
+   - **FFT calculation** — currently done in a loop for each line. This could be optimized using C++ code, GPU acceleration, or by storing data in vectors instead of lists (software).  
+   - **Too many loops** — can be improved through vectorization?? (software).  
+2. **Time accuracy** — currently estimated, not measured. Possible fixes include:  
+   - Measuring the delay between each measurement and modeling the system accordingly. (Measure and model)  
+   - Timestamping each measurement and graphing based on those timestamps. (Timestamp)  
+3. **Power calibration** — the measured power level is not absolute. The system needs calibration against a known reference source.  
+4. **Usability** — add more user-friendly features and interface improvements.  
 
 ----
 
