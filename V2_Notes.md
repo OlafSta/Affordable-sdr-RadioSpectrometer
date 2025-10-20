@@ -23,3 +23,6 @@ Knowing that each jump should ideally take 4 seconds (as set in the Python code)
 
 ## 2. Reduce the number of loops
 This works by trying to change the way the data is represented 
+
+## 3. FFT calculatio
+
