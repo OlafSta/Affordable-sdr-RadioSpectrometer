@@ -24,5 +24,15 @@ Knowing that each jump should ideally take 4 seconds (as set in the Python code)
 ## 2. Reduce the number of loops
 This works by trying to change the way the data is represented 
 
-## 3. FFT calculatio
+## 3. FFT calculation
+Batch mode?
+Apply window?
+
+The SDR and the code capture IQ sample of the signal.
+These represent the radio wavefrom in a complex form, both amplitude and phase.
+This signal is a time domain signal, meaning that its amplitude (voltage) changes over time.
+What the FFT does is convert that time-domain signal into a frequency-domain representation.
+Each recording is converted into a power vs frequency plot (insert a image here) <img width="890" height="434" alt="FFT" src="https://github.com/user-attachments/assets/365145b0-792b-423c-9787-c4d0f8e4da47" />
+  Once this is repeated multiple times we can represent the amplitude with a colour and stack each of the lines vertically to give a waterfall graph. ie each fft in the code give one horizontal line in the waterfall plot.
+
 
