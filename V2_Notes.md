@@ -63,7 +63,12 @@ Apply a window
 Well the time axis in the original is not a ture representation of time, its mearly a aproximation of the time passed.
 
 
+# 5. Packaging the data
 
+When recording raw IQ or FFT data from an SDR, every read–write operation introduces I/O latency.
+If you write directly to the disk every few milliseconds, the system spends a lot of time waiting for the storage device to finish — especially when writing small chunks. Over many iterations, this delay compounds.
+
+Packaging solves this by grouping many smaller data chunks in RAM first, then writing them to the disk in a single large operation.
 
 
 
