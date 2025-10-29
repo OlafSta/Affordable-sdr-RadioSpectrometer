@@ -1,7 +1,7 @@
 Here is a more indepth explination of the limitations of the inital model.
 
 
-## 1. Opening and Closing the RTL Object
+# 1. Opening and Closing the RTL Object
 
 Each time the RTL-SDR object is opened in Python, it adds a delay. Over time, this delay becomes significant (see comparison at the end of this section).  
 Currently, the SDR object is opened at each frequency jump.  
@@ -21,10 +21,10 @@ Knowing that each jump should ideally take 4 seconds (as set in the Python code)
 <img width="1064/2" height="605/2" alt="image" src="https://github.com/user-attachments/assets/f13f3b0a-a213-4e16-99b3-16a3f6afbb12" />
 
 
-## 2. Reduce the number of loops
+# 2. Reduce the number of loops
 This works by trying to change the way the data is represented 
 
-## 3. FFT calculation
+# 3. FFT calculation
 Batch mode?
 Apply window?
 
@@ -59,8 +59,10 @@ gpu or parallel calculation
 Apply a window
 
 
-# Time is not real !! ?? 
+# 4. Time is not real !! ?? 
 Well the time axis in the original is not a ture representation of time, its mearly a aproximation of the time passed.
+
+
 
 
 
