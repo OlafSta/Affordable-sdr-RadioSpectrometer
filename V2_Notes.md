@@ -38,25 +38,15 @@ Each recording is converted into a power vs frequency plot (insert a image here)
 The FFT is a much faster way of computing the DFT. for a 1-million-point FFT the DFT does *10^12* operations while the FFT does only 20 million operations.
 So why is this a bottle neck in my vanilla V1 system code??
 
-### FFT as bottle neck ###
+### Intial FFT as bottle neck speculations ###
 1. Looping in Python.
 2. Reading data in the HDF5 file, we do thousands of small reads from the disk which adds latency.
 3. np.fft.fft(raw_samp) calls the FFT which is fast but then it is looped over many times in a loop it makes the loop slow.
 4. writing the data on the disk as it is being processed, this could be done in packages instead.
 
-### Fixes ###
-#### 1. Batch calculation (Vectorize)
-Instead of calling the FFT one-by-one, we want to stack multiple samples and process it in one go
-#### 2. FFTW through pyFFTW
-Using a much faster fft library
-
-#### 3. Power of two FFT size
-
-#### 4. Outsourcing the FFT to the GPU??
-gpu or parallel calculation 
-
-#### 5. Increase the accuracy of the calculation
-Apply a window
+### Profile current FFT calculation function ###
+We have three steps here that we will measure using "time.perf_counter()" function, 1. Reading data, 2. FFT calculation, 3. Writing. This will show us where in the function the bottle neck is actually occuring.
+<img width="311" height="284" alt="image" src="https://github.com/user-attachments/assets/2769489f-d665-4f8e-a036-8363abdd45e6" />
 
 
 # 4. Time is not real !! ?? 
