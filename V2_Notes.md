@@ -48,6 +48,7 @@ So why is this a bottle neck in my vanilla V1 system code??
 We have three steps here that we will measure using "time.perf_counter()" function, 1. Reading data, 2. FFT calculation, 3. Writing. This will show us where in the function the bottle neck is actually occuring.
 <img width="311" height="284" alt="image" src="https://github.com/user-attachments/assets/2769489f-d665-4f8e-a036-8363abdd45e6" />
 
+The first thing i had coded for the processing side is calculating the fft as a 2d array instead of doing it for each line.
 
 # 4. Time is not real !! ?? 
 Well the time axis in the original is not a ture representation of time, its mearly a aproximation of the time passed.
