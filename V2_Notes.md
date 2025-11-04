@@ -25,8 +25,8 @@ Knowing that each jump should ideally take 4 seconds (as set in the Python code)
 This works by trying to change the way the data is represented 
 
 # 3. FFT calculation
-Batch mode?
-Apply window?
+### Batch mode?
+### Apply window?
 
 The SDR and the code capture IQ sample of the signal.
 These represent the radio wavefrom in a complex form, both amplitude and phase.
