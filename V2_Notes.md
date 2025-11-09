@@ -22,7 +22,9 @@ Knowing that each jump should ideally take 4 seconds (as set in the Python code)
 
 
 # 2. Reduce the number of loops
-This works by trying to change the way the data is represented 
+This works by trying to change the way the data is represented. 
+Instead of recording in subdevisions, we will record one large block of data that will be split up later. 
+This reduced thousands of loops 
 
 # 3. FFT calculation
 ### Batch mode?
