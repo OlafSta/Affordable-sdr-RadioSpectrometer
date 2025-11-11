@@ -22,6 +22,12 @@ def RecordRTL(start, end, duration, fft_size, file_path, gain=40):
     sdr.gain = gain #set this to auto??
 
 
+
+sudo apt update
+sudo apt install -y python3-pip python3-dev python3-setuptools git libusb-1.0-0-dev librtlsdr-dev rtl-sdr
+sudo apt install -y build-essential
+
+
     num_samples = int(sample_rate*duration)
     num_rows = num_samples // fft_size
 
