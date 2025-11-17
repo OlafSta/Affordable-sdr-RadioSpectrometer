@@ -1,168 +1,264 @@
-def RecordRTL(start, end, duration, fft_size, file_path, gain=40):
-    '''
-    start = begining frequency
-    end = end frequency
-    duration = how long each recording will be
-    fft_size = how accurate will the display be
-    file_path = location where the hdf5 file will be saved to
-    gain = the gain setting used on the RTL sdr
-    
-    Example -> RecordRTL(106e6,165e6,4,512, "18102025_Time_Test.h5)
-    '''
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
 
+################
+from rtlsdr import RtlSdr
+
+
+###############
+from datetime import datetime
+import time
+
+
+def RecordRTL(start, end, duration, fft_size, file_path, gain=40):
+    """
+    Sweeps frequencies between 'start' and 'end'.
     
-    if start >= end:  #prevent while loop for going for ever
-        print("Error")
+    Saves raw IQ samples into HDF5 groups.
+    Each group = one center frequency span of 2 MHz.
+    """
+
+    if start >= end:
+        print("Error: Start frequency must be lower than end frequency")
         return
 
     sample_rate = 2e6
-    
-    sdr = RtlSdr() #open the sdr
-    sdr.sample_rate = sample_rate #set sample rate of sdr 2MHz
-    sdr.gain = gain #set this to auto??
+    sdr = RtlSdr()
+    sdr.sample_rate = sample_rate
+    sdr.gain = gain
 
+    num_samples = int(sample_rate * duration)
 
-
-sudo apt update
-sudo apt install -y python3-pip python3-dev python3-setuptools git libusb-1.0-0-dev librtlsdr-dev rtl-sdr
-sudo apt install -y build-essential
-
-
-    num_samples = int(sample_rate*duration)
-    num_rows = num_samples // fft_size
-
-    try:  #error cathcing
-        with h5py.File(file_path, 'w') as hdfile:  #open a hdf5 file
+    try:
+        with h5py.File(file_path, 'w') as hdfile:
             while start < end:
-                center_freq = start + sample_rate/2
-                sdr.center_freq = center_freq #center frequency 
+                center_freq = start + sample_rate / 2
+                sdr.center_freq = center_freq
 
-                group = hdfile.create_group(f"{center_freq/1e6:.1f}")
-    
-                #Add recording here......
-                _ = sdr.read_samples(2048) #gets rid of samples thats are 
-                samples = sdr.read_samples(fft_size * num_rows)
-                
-                group.create_dataset("samples" , data=samples, dtype='complex64') #Compress data
-                
-                group.attrs['center_freq'] = center_freq 
-                group.attrs['sample_rate'] = sample_rate
-                group.attrs['duration'] = duration
-                #subduration??
-                group.attrs['gain'] = gain
-                group.attrs['time_stamp'] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                group.attrs['fft_size'] = fft_size
-                
-                start += sample_rate #moves to next center freq. 
-                
-    except Exception as e:
-        print(f"Error: {e}")
+                group = hdfile.create_group(f"{center_freq/1e6:.3f}")
+
+                _ = sdr.read_samples(2048)  # Flush tuner DC bias
+                samples = sdr.read_samples(num_samples)
+
+                group.create_dataset("samples", data=samples, dtype='complex64')
+
+                # Store metadata
+                group.attrs.update({
+                    'center_freq': center_freq,
+
+                    'sample_rate': sample_rate,
+                    'duration': duration,
+                    'gain': gain,
+                    'fft_size': fft_size,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M")
+                })
+
+                print(f"✔ Recorded {center_freq/1e6:.3f} MHz")
+                start += sample_rate
+
 
     finally:
         sdr.close()
-            
-        
 
-def Process(input_hdf5, output_hdf5, calibration_array=None):
+
+def FlatFieldCalibration(input_hdf5, max_frames=5000):
     """
-    Processes raw SDR data in an HDF5 file using FFT to generate averaged power spectra.
-    
-    input_hdf5: path to raw file from RecordRTL()
-    output_hdf5: path to save processed FFT data
-    sub_duration: duration of each sub-block (seconds) for averaging
-    calibration_array: optional calibration correction array (same length as fft_size)
+    Calculates averaged amplitude correction curve across all datasets.
     """
 
-    with h5py.File(input_hdf5, "r") as input_file, h5py.File(output_hdf5, "w") as output_file:
-        sorted_group_names = sorted(input_file.keys(), key=lambda x: float(x))
+    sum_fft = None
+    count = 0
 
-        for group_name in sorted_group_names:
-            input_group = input_file[group_name]
-            output_group = output_file.create_group(group_name)
-
-            # Read attributes
-            center_freq = input_group.attrs["center_freq"]
-            sample_rate = input_group.attrs["sample_rate"]
-            duration = input_group.attrs["duration"]
-            fft_size = input_group.attrs["fft_size"]
-
-            samples = np.array(input_group["samples"])
-            num_samples = len(samples)
-            num_frames = num_samples // fft_size
-
-            print(f"Processing {group_name} MHz: {num_frames} FFT frames")
-
-            # Pre-allocate array to hold averaged spectrum
-            spectrum = np.zeros(fft_size)
-
-            # Process FFT frames
+    with h5py.File(input_hdf5, 'r') as file:
+        for group in file.values():
+            samples = group["samples"][:]
+            fft_size = group.attrs["fft_size"]
             window = np.hanning(fft_size)
 
-            for i in range(num_frames):
-                chunk = samples[i*fft_size:(i+1)*fft_size]
-                chunk = chunk * window
-                fft_result = np.fft.fftshift(np.fft.fft(chunk, fft_size))
-                power = np.abs(fft_result)**2
-                spectrum += power
+            num_chunks = len(samples) // fft_size
 
-            # Average the power spectrum
-            spectrum /= num_frames
-            spectrum_db = 10 * np.log10(spectrum + 1e-12)  # avoid log(0)
+            for i in range(min(num_chunks, max_frames)):
+                chunk = samples[i*fft_size:(i+1)*fft_size] * window
+                amplitude = np.abs(np.fft.fftshift(np.fft.fft(chunk)))
 
-            # Apply calibration if provided
-            if calibration_array is not None:
-                if len(calibration_array) == fft_size:
-                    spectrum_db -= calibration_array
+                if sum_fft is None:
+                    sum_fft = amplitude
                 else:
-                    print("Warning: Calibration array length does not match FFT size.")
+                    sum_fft += amplitude
 
-            # Save processed data
-            output_group.create_dataset("power_spectrum_db", data=spectrum_db)
-            output_group.attrs["center_freq"] = center_freq
-            output_group.attrs["sample_rate"] = sample_rate
-            output_group.attrs["fft_size"] = fft_size
-            output_group.attrs["duration"] = duration
-            output_group.attrs["time_stamp"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-            output_group.attrs["num_frames"] = num_frames
+                count += 1
 
-        print(f"Processing complete. Output saved to {output_hdf5}")
+    correction_curve = sum_fft / count
+    correction_curve[correction_curve == 0] = 1e-12
+
+    return correction_curve
 
 
-def generate_waterfall_plot(output_hdf5, output_file="waterfall.png"):
+
+def ProcessRTL(input_hdf5, output_hdf5, calibration_array=None):
     """
-    Creates a combined waterfall plot from processed FFT data.
+    Produces BOTH:
+      - averaged spectrum
+      - full waterfall
     """
-    freqs = []
-    spectra = []
 
-    with h5py.File(output_hdf5, "r") as file:
-        sorted_groups = sorted(file.keys(), key=lambda x: float(x.split()[0]))
-        for group_name in sorted_groups:
-            group = file[group_name]
-            spectrum = group["power_spectrum_db"][:]
-            spectra.append(spectrum)
-            freqs.append(group.attrs["center_freq"])
+    with h5py.File(input_hdf5, "r") as f_in, h5py.File(output_hdf5, "w") as f_out:
 
-    if not spectra:
-        print("No spectra found in file.")
-        return
+        for name in sorted(f_in.keys(), key=lambda x: float(x)):
+            group_in = f_in[name]
+            group_out = f_out.create_group(name)
 
-    waterfall = np.vstack(spectra)
-    freq_axis = np.array(freqs) / 1e6  # MHz
-    plt.figure(figsize=(12, 6))
+            samples = group_in["samples"][:]
+            fft_size = group_in.attrs["fft_size"]
+
+            window = np.hanning(fft_size)
+
+            num_frames = len(samples) // fft_size
+            waterfall = np.zeros((num_frames, fft_size))
+
+            # Compute waterfall + averaged power
+            avg_power = np.zeros(fft_size)
+
+            for i in range(num_frames):
+                chunk = samples[i*fft_size:(i+1)*fft_size] * window
+                fft_result = np.fft.fftshift(np.fft.fft(chunk))
+                power = np.abs(fft_result)**2
+
+                waterfall[i, :] = 10*np.log10(power + 1e-12)
+                avg_power += power
+
+
+            # Apply averaging
+            avg_power /= num_frames
+            avg_db = 10*np.log10(avg_power + 1e-12)
+
+            # Apply flat-field correction if provided
+            if calibration_array is not None and len(calibration_array) == fft_size:
+                avg_db -= calibration_array
+                waterfall -= calibration_array
+            elif calibration_array is not None:
+                print("⚠ Calibration array size mismatch — skipping.")
+
+
+            # Store output
+            group_out.create_dataset("spectrum_avg_db", data=avg_db, dtype='float32')
+            group_out.create_dataset("waterfall_db", data=waterfall, dtype='float32')
+
+            # Copy metadata
+            for k,v in group_in.attrs.items():
+                group_out.attrs[k] = v
+            
+
+
+def generate_waterfall_plot(processed_hdf5, output_base='waterfall', batch_size=20):
+    """
+    Reads processed waterfall data from HDF5 and generates multi-panel waterfall images.
+    
+    batch_size controls how many frequency groups get placed into one image row.
+    """
+    
+    groups_data = []
+    centers = []
+    batch_index = 1
+
+    with h5py.File(processed_hdf5, "r") as f:
+        group_names = sorted(f.keys(), key=lambda x: float(x))
+
+        for g in group_names:
+            group = f[g]
+            if "waterfall_db" not in group:
+                print(f"⚠ Skipping {g} — no waterfall dataset found")
+                continue
+
+            waterfall = np.array(group["waterfall_db"])
+
+            centers.append(group.attrs["center_freq"])
+            groups_data.append(waterfall)
+
+            # once enough groups collected — save batch
+            if len(groups_data) >= batch_size:
+                save_waterfall_image(groups_data, centers, output_base, batch_index)
+                batch_index += 1
+                groups_data, centers = [], []
+
+    # save any remaining frequencies
+    if groups_data:
+        save_waterfall_image(groups_data, centers, output_base, batch_index)
+
+
+def save_waterfall_image(groups_data, centers, output_base, batch_index):
+    """
+    Stitches multiple waterfall matrices side-by-side into one figure.
+    """
+
+    # Sort by frequency
+    sorted_pairs = sorted(zip(centers, groups_data), key=lambda x: x[0])
+    centers_sorted, groups_sorted = zip(*sorted_pairs)
+
+    # Ensure equal row count (time consistency)
+    min_rows = min(g.shape[0] for g in groups_sorted)
+    trimmed = [g[:min_rows, :] for g in groups_sorted]
+
+    # Combine into a single large waterfall
+    waterfall_full = np.hstack(trimmed)
+
+    # Compute frequency scale
+    #sample_rate = list(groups_data[0].shape)[-1]  # width = FFT size
+    # Correct: read sample rate from metadata, not matrix size
+    sample_rate =float(groups_sorted[0].attrs['sample_rate'] if hasattr(groups_sorted[0], "attrs") else 1 )
+
+    
+    L = (centers_sorted[0] - 1e6) / 1e6
+    R = (centers_sorted[-1] + 1e6) / 1e6
+
+    fft_size = groups_sorted[0].shape[1]         # number of bins
+    seconds_per_frame = fft_size / sample_rate
+
+    print(seconds_per_frame)
+
+    time_end = min_rows * seconds_per_frame
+
+    fig = plt.figure(figsize=(48, 6))
     plt.imshow(
-        waterfall,
-        aspect="auto",
-        extent=[freq_axis[0], freq_axis[-1], 0, waterfall.shape[0]],
-        cmap="viridis",
-        vmin=np.min(waterfall),
-        vmax=np.max(waterfall)
+        waterfall_full,
+        cmap='viridis',
+        aspect='auto',
+        extent=[L, R, time_end, 0],
+        vmin=np.percentile(waterfall_full, 1),
+        vmax=np.percentile(waterfall_full, 99)
     )
+
     plt.colorbar(label="Power (dB)")
     plt.xlabel("Frequency (MHz)")
-    plt.ylabel("Scan index")
-    plt.title("Waterfall Spectrum")
-    plt.tight_layout()
-    plt.savefig(output_file, dpi=200)
+    plt.ylabel("Time (seconds)")
+    plt.title(f"Waterfall Sweep (Batch {batch_index})")
+
+    file_name = f"{output_base}_{batch_index}.png"
+    plt.savefig(file_name, bbox_inches="tight", dpi=300)
     plt.close()
-    print(f"Waterfall plot saved as {output_file}")
+
+    print(f"✔ Saved {file_name}")
+
+
+
+
+def stack_images_ver(image_paths, output_path, no_stack=False):
+    images = [Image.open(path) for path in image_paths]
+
+    max_width = max(img.width for img in images)
+    total_height = sum(img.height for img in images)
+
+    stacked = Image.new("RGB", (max_width, total_height), (255, 255, 255))
+
+    y_offset = 0
+    for img in images:
+        padded = Image.new("RGB", (max_width, img.height), (255, 255, 255))
+        padded.paste(img, (0, 0))
+        stacked.paste(padded, (0, y_offset))
+        y_offset += img.height
+
+    stacked.save(output_path)
+
+
+
